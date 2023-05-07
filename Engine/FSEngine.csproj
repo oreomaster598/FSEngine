@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{092872E7-DA85-4FC5-86A6-5D1AC8791854}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FSEngine</RootNamespace>
+    <AssemblyName>FSEngine</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>3</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Box2DSharp, Version=0.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Box2DSharp.0.6.0\lib\netstandard2.0\Box2DSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="ImGui.NET, Version=1.88.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ImGui.NET.1.88.0\lib\netstandard2.0\ImGui.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenTK, Version=3.3.3.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenTK.3.3.3\lib\net20\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Back\ChunkDictionary.cs" />
+    <Compile Include="Front\CellSystem\Cell.cs" />
+    <Compile Include="Front\CellSystem\CellChunk.cs" />
+    <Compile Include="Front\CellSystem\CellWorld.cs" />
+    <Compile Include="Front\CellSystem\ChunkCache.cs" />
+    <Compile Include="Front\CellSystem\ChunkManager.cs" />
+    <Compile Include="Front\CellSystem\ChunkWorker.cs" />
+    <Compile Include="Front\CellSystem\Effects\Explosion.cs" />
+    <Compile Include="Front\CellSystem\Events\EventManager.cs" />
+    <Compile Include="Front\CellSystem\Material.cs" />
+    <Compile Include="Front\Debug.cs" />
+    <Compile Include="Front\Geometry\CPolygonShape.cs" />
+    <Compile Include="Front\Geometry\DouglasPeucker.cs" />
+    <Compile Include="Front\Geometry\MarchingSquares.cs" />
+    <Compile Include="Front\Geometry\Mesher.cs" />
+    <Compile Include="Front\GFX\B2DDebug.cs" />
+    <Compile Include="Front\IO\Image.cs" />
+    <Compile Include="Front\Statistics.cs" />
+    <Compile Include="Front\Tiles\Tile.cs" />
+    <Compile Include="Front\Game.cs" />
+    <Compile Include="Front\CellSystem\CellRasterizer.cs" />
+    <Compile Include="Front\GFX\Color.cs" />
+    <Compile Include="Front\GFX\CPU\CPUGraphics.cs" />
+    <Compile Include="Front\GFX\LightMap.cs" />
+    <Compile Include="Front\GFX\OpenGL\Buffers.cs" />
+    <Compile Include="Front\GFX\OpenGL\Camera.cs" />
+    <Compile Include="Front\GFX\OpenGL\Graphics.cs" />
+    <Compile Include="Front\GFX\OpenGL\Model.cs" />
+    <Compile Include="Front\Factories.cs" />
+    <Compile Include="Front\GFX\OpenGL\Shader.cs" />
+    <Compile Include="Front\GFX\OpenGL\Texture.cs" />
+    <Compile Include="Front\GFX\OpenGL\Transform.cs" />
+    <Compile Include="Front\GFX\Parallax.cs" />
+    <Compile Include="Front\Concurrency\TSBitmap.cs" />
+    <Compile Include="Back\ImGuiController.cs" />
+    <Compile Include="Back\Interop\Kernel.cs" />
+    <Compile Include="Front\IO\CSV.cs" />
+    <Compile Include="Front\IO\Keyboard.cs" />
+    <Compile Include="Front\IO\Mouse.cs" />
+    <Compile Include="Front\IO\State.cs" />
+    <Compile Include="Front\IO\XML.cs" />
+    <Compile Include="Front\QoL\Inventory.cs" />
+    <Compile Include="Front\UI\ImUtils.cs" />
+    <Compile Include="Language.cs" />
+    <Compile Include="Back\Memory.cs" />
+    <Compile Include="Front\Noise.cs" />
+    <Compile Include="Front\CellSystem\Effects\Particles\Particle.cs" />
+    <Compile Include="Front\CellSystem\Effects\Particles\ParticleEngine.cs" />
+    <Compile Include="Back\Physics\Collider.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Front\CellSystem\Sampler.cs" />
+    <Compile Include="Front\SoundEngine.cs" />
+    <Compile Include="Front\Structure.cs" />
+    <Compile Include="Front\Time.cs" />
+    <Compile Include="Front\Concurrency\TSDictionary.cs" />
+    <Compile Include="Front\UI\Overlay.cs" />
+    <Compile Include="Front\Utils.cs" />
+    <Compile Include="TestGame\Game.cs" />
+    <Compile Include="TestGame\Handlers.cs" />
+    <Compile Include="Window.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="OpenTK.dll.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\ImGui.NET.1.88.0\build\net40\ImGui.NET.targets" Condition="Exists('..\packages\ImGui.NET.1.88.0\build\net40\ImGui.NET.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\ImGui.NET.1.88.0\build\net40\ImGui.NET.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ImGui.NET.1.88.0\build\net40\ImGui.NET.targets'))" />
+  </Target>
+</Project>

@@ -1,0 +1,5 @@
+<Parallax sort="true">
+	<Layer texture="./Hills.png" speed="0.6"/>
+	<Layer texture="./Mountains.png" speed="0.45"/>
+	<Layer texture="./Clouds.png" speed="0.2"/>
+</Parallax>
