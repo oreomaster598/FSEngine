@@ -112,6 +112,8 @@ namespace MemoryMgr
         {
             Marshal.Copy(src, 0, (IntPtr)memory[startindex], size);
         }
+        [DllImport("kernel32.dll", EntryPoint = "CopyMemory", SetLastError = false)]
+        public static extern void CopyMemory(IntPtr dest, IntPtr src, uint count);
         public static T Get<T>(UnmanagedMemory memory, int startindex) where T : unmanaged
         {
             int size = Marshal.SizeOf(typeof(T));

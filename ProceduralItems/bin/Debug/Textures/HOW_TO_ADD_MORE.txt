@@ -1,0 +1,28 @@
+Textures:
+
+all textures must be the same size (i used 16x16 but any size will work).
+all textures must be monochrome to be colored properly.
+
+
+Texture Naming Scheme:
+
+a_ax_ay_bx_by.png
+
+
+a: possible names separated by a hyphen. look at Blades/hook-sickle_0_0_0_0.png for an example
+
+ax/ay: where the next part attaches to the texture. look at Pommel/pommel1_2_2_0_0.png for an example
+
+bx/by: where the pervious part attaches to the texture. look at Blades/trident_15_15_5_5.png for an example
+
+
+Materials:
+
+each part folder has a material.txt file which has all the colors for that part
+color are in RGB format as a float(0-1 instead of 0-255)
+each line is written like R,G,B
+
+
+
+if the app crashes/wont open that means you have a texture name or color that does not follow these rules. 
+or a file besides a texture or material list is in a parts folder.

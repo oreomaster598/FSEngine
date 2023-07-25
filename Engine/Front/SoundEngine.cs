@@ -144,14 +144,14 @@ namespace FSEngine.Audio
         long delay_start;
         public bool PlayDelay(int delay)
         {
-            if(Time.sw.ElapsedMilliseconds >= delay_start + delay)
+            if(Time.ElapsedMilliseconds >= delay_start + delay)
             {
                 delay = 0;
             }
             if(delay == 0)
             {
                 this.delay = delay;
-                delay_start = Time.sw.ElapsedMilliseconds;
+                delay_start = Time.ElapsedMilliseconds;
                 if (Playing())
                     Stop();
                 Play();

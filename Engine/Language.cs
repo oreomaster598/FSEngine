@@ -10,7 +10,7 @@ namespace FSEngine
 {
     public static class Language
     {
-        private static Dictionary<string, string> localized = new Dictionary<string, string>();
+        public static Dictionary<string, string> localized = new Dictionary<string, string>();
 
         public static char[] elder_futhark = "ᚢᚦᚨᚲᚷᚹᚺᚾᛁᛃᛈᛇᛊᛉᛏᛒᛖᛗᛚᛜᛞᛟᚠᚱ".ToCharArray();
         public static string[] convert = {  "([uU]|[o]{2})", "[Tt][Hh]", "[Aa][Ww]{0,1}",

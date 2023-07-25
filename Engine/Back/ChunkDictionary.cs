@@ -1,4 +1,5 @@
 ﻿using FSEngine.CellSystem;
+using FSEngine.Concurrency;
 using FSEngine.IO;
 using System;
 using System.Collections.Generic;
@@ -25,14 +26,34 @@ namespace FSEngine
 
         int origin_x = 0, origin_y = 0;
         int sx, sy;
-
+        int buffer;
         public ChunkDictionary(int width, int height, int buffer)
         {
+            this.buffer = buffer;
             sx = width + (buffer * 2);
             sy = height + (buffer * 2);
             chunks = new CellChunk[sx, sy]; 
             ichunks = new CellChunk[sx, sy];
-        }        ///Waits until CleanUp to kill chunk
+        }
+        
+        /// <summary>
+        /// Forces a chunk into the world.
+        /// </summary>
+        /// <param name="chunk"></param>
+        public void Push(CellChunk chunk)
+        {
+            chunk.save = false;
+            if(chunk.filledcells > 0)
+            {
+                State.SaveChunk(chunk, ChunkCache.cache);
+            }
+            if(InBounds(chunk.x, chunk.y))
+            {
+                chunk.has_file = true;
+                this[chunk.x, chunk.y] = chunk;
+            }
+        }
+        ///Waits until CleanUp to kill chunk
         public void LazyKill(int x, int y)
         {
             CellChunk c = chunks[x - origin_x, y - origin_y];
@@ -47,13 +68,6 @@ namespace FSEngine
         public void Cycle(int _x, int _y)
         {
 
-            if (origin_x == _x && origin_y == _y)
-                return;
-
-            int dx = _x - origin_x;
-            int dy = _y - origin_y;
-
-
             foreach (CellChunk c in ToKill)
             {
                 if (c == null)
@@ -66,7 +80,16 @@ namespace FSEngine
 
 
             }
+
             ToKill.Clear();
+
+            if (origin_x == _x && origin_y == _y)
+                return;
+
+            int dx = _x - origin_x;
+            int dy = _y - origin_y;
+
+
 
             Array.Copy(chunks, ichunks, chunks.Length);
             Array.Clear(chunks, 0, chunks.Length);
@@ -109,6 +132,11 @@ namespace FSEngine
                         else
                         {
                             chunks[mx, my] = ichunks[x, y];
+                            if(chunks[mx, my] != null)
+                            {
+                                chunks[mx, my].rendered = false;
+                            }
+
                             if (chunks[mx, my] != null && (chunks[mx, my].x != tx || chunks[mx, my].y != ty))
                             {
                                 chunks[mx, my] = null;
@@ -143,6 +171,14 @@ namespace FSEngine
         public bool InBounds(int x, int y)
         {
             return x >= origin_x && y >= origin_y && y < (sy + origin_y) && x < (sx + origin_x);
+        }
+        public bool Simulate(int x, int y)
+        {
+            return x >= origin_x + 2 && y >= origin_y + 2 && y < (sy + origin_y - 2) && x < (sx + origin_x - 2);
+        }
+        public bool InFrame(int x, int y)
+        {
+            return x >= origin_x + buffer - 1 && y >= origin_y + buffer - 1 && y < (sy + origin_y - buffer + 1) && x < (sx + origin_x - buffer + 1);
         }
         public void Add( Vector2 key, CellChunk chunk)
         {

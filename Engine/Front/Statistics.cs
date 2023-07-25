@@ -10,5 +10,8 @@ namespace FSEngine
     {
         public int Shaders, Textures, Sounds, Models, Files;
         public int b2dBodies, b2dJoints, b2dTriangles;
+
+        public int rendered_chunks;
+        public double render_ms, step_cells_ms, step_world_ms;
     }
 }

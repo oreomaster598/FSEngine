@@ -39,6 +39,13 @@ namespace FSEngine
             SendColor(Color.Aqua);
             Console.WriteLine($"[{sender.ToUpper()}] {error}");
         }
+        public static void Log(string error, Color color, [CallerMemberName] string sender = "")
+        {
+            //writer.AppendLine($"{DateTime.Now.ToLongDateString()}, {DateTime.Now.ToLongTimeString()}");
+            writer.AppendLine($"[{sender.ToUpper()}] {error}");
+            SendColor(color);
+            Console.WriteLine($"[{sender.ToUpper()}] {error}");
+        }
         public static void ExportLog()
         {
             string log = writer.ToString();

@@ -30,7 +30,10 @@ namespace FSEngine.CellSystem
         public Int16 owner;
         public Byte paint;
 
+
         public Byte A, R, G, B;
+
+        public Int16 heat;
         //public Color c = Color.Transparent;
         public Cell(short type = 0)
         {
@@ -40,6 +43,7 @@ namespace FSEngine.CellSystem
             UserData = 0;
             owner = 0;
             paint = 0;
+            heat = 0;
             A = 0;
             R = 0;
             G = 0;
@@ -50,7 +54,7 @@ namespace FSEngine.CellSystem
         {
             //Effect e = new Effect();
             //if (Materials.effects.ContainsKey(cell.type))
-             //   e = Materials.effects[cell.type];
+            //   e = Materials.effects[cell.type];
             return Color.FromArgb(0, 0, cell.type, 0);
         }
 

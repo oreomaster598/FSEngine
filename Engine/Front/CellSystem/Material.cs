@@ -25,6 +25,8 @@ namespace FSEngine.CellSystem
         public Int16 DispersionRate;
         public Int16 Corrosive;
         public Int16 CorrosionResist;
+        public Int16 StaticHeat;
+        public Int16 ThermalConduct;
     }
 
     public enum MaterialType : short
@@ -55,8 +57,13 @@ namespace FSEngine.CellSystem
         Brine,
         Ember,
         Silver,
+        Caol,
+        Cobble,
+        Smoke,
+        Plasma
 
     }
+    [BlazePreJIT]
     public static unsafe class Materials
     {
         public static List<Material> materials = new List<Material>();
@@ -72,6 +79,8 @@ namespace FSEngine.CellSystem
         }
         public static void Add(Material mat)
         {
+            if (mat.ThermalConduct == 0)
+                mat.ThermalConduct = 2;
             if (Sampler.mappings.Count < materials.Count)
                 throw new Exception("Materials must have a sampler associated with them.");
             materials.Add(mat);
@@ -79,6 +88,8 @@ namespace FSEngine.CellSystem
         }
         public static void Add(Material mat, string sampler)
         {
+            if (mat.ThermalConduct == 0)
+                mat.ThermalConduct = 2;
             materials.Add(mat);
             Sampler.Map(new Sampler(sampler), id);
             id++;
@@ -96,30 +107,5 @@ namespace FSEngine.CellSystem
             id = 1;
             materials.Clear();
         }
-        /*public static void LoadFromHeap()
-        {
-            State.SetDirectory("Content/Materials");
-
-            Manifest manifest = State.LoadManifest<Material>();
-            Material[] materials;
-            using (Heap heap = Heap.FromBytes(File.ReadAllBytes("Content/Materials/Materials.heap"), HeapFormat.Stride16))
-            {
-                materials = heap.GetAll<Material>(1, heap.Get<Int32>(0));
-            }
-
-            foreach (CellData data in manifest.data)
-            {
-                Language.AddLocalization($"material.mat_{id}.name", data.localization);
-                Add(materials[data.materialtype], data.texture);
-            }
-        }
-        public static void Load(Manifest manifest, Material[] mats)
-        {
-            foreach (CellData data in manifest.data)
-            {
-                Language.AddLocalization($"material.mat_{id}.name", data.localization);
-                Add(mats[data.materialtype], data.texture);
-            }
-        }*/
     }
 }

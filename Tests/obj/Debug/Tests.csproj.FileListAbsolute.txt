@@ -1,0 +1,8 @@
+C:\Users\gabri\Documents\GitHub\FSEngine\Tests\bin\Debug\Tests.exe.config
+C:\Users\gabri\Documents\GitHub\FSEngine\Tests\bin\Debug\Tests.exe
+C:\Users\gabri\Documents\GitHub\FSEngine\Tests\bin\Debug\Tests.pdb
+C:\Users\gabri\Documents\GitHub\FSEngine\Tests\obj\Debug\Tests.csproj.AssemblyReference.cache
+C:\Users\gabri\Documents\GitHub\FSEngine\Tests\obj\Debug\Tests.csproj.SuggestedBindingRedirects.cache
+C:\Users\gabri\Documents\GitHub\FSEngine\Tests\obj\Debug\Tests.csproj.CoreCompileInputs.cache
+C:\Users\gabri\Documents\GitHub\FSEngine\Tests\obj\Debug\Tests.exe
+C:\Users\gabri\Documents\GitHub\FSEngine\Tests\obj\Debug\Tests.pdb

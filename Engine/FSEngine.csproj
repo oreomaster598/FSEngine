@@ -77,17 +77,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Back\Blazing.cs" />
     <Compile Include="Back\ChunkDictionary.cs" />
     <Compile Include="Front\CellSystem\Cell.cs" />
     <Compile Include="Front\CellSystem\CellChunk.cs" />
     <Compile Include="Front\CellSystem\CellWorld.cs" />
     <Compile Include="Front\CellSystem\ChunkCache.cs" />
-    <Compile Include="Front\CellSystem\ChunkManager.cs" />
     <Compile Include="Front\CellSystem\ChunkWorker.cs" />
     <Compile Include="Front\CellSystem\Effects\Explosion.cs" />
     <Compile Include="Front\CellSystem\Events\EventManager.cs" />
     <Compile Include="Front\CellSystem\Material.cs" />
+    <Compile Include="Front\CellSystem\WeakCollider.cs" />
     <Compile Include="Front\Debug.cs" />
+    <Compile Include="Front\Editor\Widgets.cs" />
+    <Compile Include="Front\EntitySystem.cs" />
     <Compile Include="Front\Geometry\CPolygonShape.cs" />
     <Compile Include="Front\Geometry\DouglasPeucker.cs" />
     <Compile Include="Front\Geometry\MarchingSquares.cs" />
@@ -120,6 +123,8 @@
     <Compile Include="Front\IO\XML.cs" />
     <Compile Include="Front\QoL\Inventory.cs" />
     <Compile Include="Front\UI\ImUtils.cs" />
+    <Compile Include="FSEditor\Editor.cs" />
+    <Compile Include="FSEditor\EditorRasterizer.cs" />
     <Compile Include="Language.cs" />
     <Compile Include="Back\Memory.cs" />
     <Compile Include="Front\Noise.cs" />
@@ -135,8 +140,10 @@
     <Compile Include="Front\Concurrency\TSDictionary.cs" />
     <Compile Include="Front\UI\Overlay.cs" />
     <Compile Include="Front\Utils.cs" />
-    <Compile Include="TestGame\Game.cs" />
-    <Compile Include="TestGame\Handlers.cs" />
+    <Compile Include="Tests\Game.cs" />
+    <Compile Include="Tests\Handlers.cs" />
+    <Compile Include="Tests\Vision.cs" />
+    <Compile Include="Tests\WorldGenerator.cs" />
     <Compile Include="Window.cs" />
   </ItemGroup>
   <ItemGroup>

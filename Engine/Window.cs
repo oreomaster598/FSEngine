@@ -29,10 +29,9 @@ namespace FSEngine
         public static Game game;
         public static bool DebugMode = true;
         public ImGuiController controller;
-        public static System.Drawing.Color sky = System.Drawing.Color.FromArgb(68,68,68);
+        public static System.Drawing.Color sky = System.Drawing.Color.CornflowerBlue;
         public static int width = 0;
         public static int height = 0;
-        public static bool DrawInWindow = false;
         bool initialized = false;
         public Window(Type game_type) : base(720, 480, GraphicsMode.Default, "FSEngine")
         {
@@ -192,36 +191,25 @@ namespace FSEngine
             
             fbo.BeginDrawing();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            GL.ClearColor(sky.R / 255f, sky.G / 255f, sky.B / 255f, sky.A / 255f); 
-
-            game.Draw();
-
-            fbo.EndDrawing();
-
-            controller.Update(this, (float)e.Time);
+            GL.ClearColor(sky.R / 255f, sky.G / 255f, sky.B / 255f, sky.A / 255f);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
 
-            if(!DrawInWindow)
-            {
-                Graphics.UseTextureShader();
-                Graphics.Begin(ResourceFactory.Quad, WindowCamera);
-                Graphics.Draw(new Transform(0, new Vector2(0, 0), new Vector2(Width, -Height)), fbo.tex);
-                Graphics.End();
-            }
-            else
-            {
-                ImGui.Begin("##VP");
-                Vector2 uv = new Vector2(0,1f);
-                Vector2 uv2 = new Vector2(1f, 0);
-                ImGui.Image((IntPtr)fbo.tex.id, ImGui.GetContentRegionAvail(), uv, uv2);
-                ImGui.End();
-            }
+                game.Draw();
 
 
-            game.DrawUI();
+                fbo.EndDrawing();
+
+                game.DrawFBO(fbo, WindowCamera, Width, Height);
+
+                controller.Update(this, (float)e.Time);
+
+                game.DrawUI();
 
 
-            controller.Render(); // Render UI
+                controller.Render(); // Render UI
+
 
             ImGuiController.CheckGLError("End of frame");
             SwapBuffers();

@@ -73,9 +73,9 @@ namespace FSEngine
 
         public bool Tick()
         {
-            if(Time.sw.ElapsedMilliseconds - start >= ms)
+            if(Time.ElapsedMilliseconds - start >= ms)
             {
-                start = Time.sw.ElapsedMilliseconds;
+                start = Time.ElapsedMilliseconds;
                 return true;
             }
             return false;
@@ -131,6 +131,80 @@ namespace FSEngine
         }
     }
 
+
+
+    public class WeightedRandom<T>
+    {
+        class WeightedItem<T>
+        {
+            public T value;
+            public double weight;
+
+            public WeightedItem(T value, double weight)
+            {
+                this.value = value;
+                this.weight = weight;
+            }
+        }
+
+        List<WeightedItem<T>> items = new List<WeightedItem<T>>();
+
+        double total_weight;
+        uint seed = 1;
+        public int length = 0;
+
+        public WeightedRandom(uint seed)
+        {
+            this.seed = seed;
+        }
+        public WeightedRandom()
+        {
+            this.seed = (uint)DateTime.Now.Millisecond;
+        }
+        public void Add(T item, double weight)
+        {
+            total_weight += weight;
+
+            items.Add(new WeightedItem<T>(item, weight));
+
+            length++;
+        }
+        public void Remove(T item)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].value.Equals(item))
+                {
+                    total_weight -= items[i].weight;
+                    items.RemoveAt(i);
+                    length--;
+                    return;
+                }
+            }
+
+        }
+        double Nextdouble(double min, double max)
+        {
+            unchecked
+            {
+                seed = (16807 * seed) % 2147483647;
+            }
+            return min + (seed / 2147483647d * (max - min));
+        }
+        public T Pick()
+        {
+            double randomWeight = Nextdouble(0, total_weight / items.Count);
+            for (int i = 0; i < items.Count; ++i)
+            {
+                randomWeight -= (items[i].weight / items.Count);
+                if (randomWeight < 0)
+                {
+                    return items[i].value;
+                }
+            }
+            return default(T);
+        }
+    }
     public class TSRandom
     {
         //a = 16807;
@@ -144,6 +218,35 @@ namespace FSEngine
             {
                 seed = (16807 * seed) % 2147483647;
                 return seed;
+            }
+        }
+        public int Next(int min, int max)
+        {
+            unchecked
+            {
+                seed = (16807 * seed) % 2147483647;
+                return (seed % max - min + 1) + min;
+            }
+        }
+        public bool NextBool()
+        {
+            unchecked
+            {
+                seed = (16807 * seed) % 2147483647;
+                return seed % 3 == 0;
+            }
+        }
+        /// <summary>
+        /// Return a random number.
+        /// </summary>
+        /// <param name="weight">Percentage of returning true</param>
+        /// <returns></returns>
+        public bool NextBool(double weight)
+        {
+            unchecked
+            {
+                seed = (16807 * seed) % 2147483647;
+                return seed % (1d / weight + 1) == 0;
             }
         }
         public double NextDouble()

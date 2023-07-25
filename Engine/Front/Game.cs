@@ -57,6 +57,13 @@ namespace FSEngine
                 ImGui.Text($"{stats.b2dJoints} Joint(s)");
                 ImGui.Text($"{stats.b2dTriangles} Collider Triangle(s)");
             }
+
+            if(ImGui.CollapsingHeader("Performance"))
+            {
+                ImGui.Text($"Render Time {stats.render_ms}ms");
+                ImGui.Text($"Step Time {stats.step_cells_ms}ms");
+                ImGui.Text($"Rendered Chunks {stats.rendered_chunks}");
+            }
             ImGui.End();
         }
 
@@ -98,6 +105,13 @@ namespace FSEngine
            
         }
 
+        public virtual void DrawFBO(FrameBuffer fbo, Camera camera, int Width, int Height)
+        {
+            Graphics.UseTextureShader();
+            Graphics.Begin(ResourceFactory.Quad, camera);
+            Graphics.Draw(new Transform(0, new Vector2(0, 0), new Vector2(Width, -Height)), fbo.tex);
+            Graphics.End();
+        }
 
 
         public virtual void Update()

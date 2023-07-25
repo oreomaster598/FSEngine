@@ -36,15 +36,16 @@ namespace FSEngine.CellSystem
         public Color Sample(Int32 x, Int32 y, Int32 camx, Int32 camy) => sampler.GetPixel((UInt32)((x + camx) % w), (UInt32)((y + camy) % h), PixelFormat.ABGR);
         public Color Sample(Int32 x, Int32 y) => sampler.GetPixel((UInt32)(x % w), (UInt32)(y % h), PixelFormat.ABGR);
     }
+    [BlazePreJIT]
     public class Sampler
     {
-        internal static Dictionary<Int16, Sampler> mappings = new Dictionary<Int16, Sampler>();
+        public static Dictionary<Int16, Sampler> mappings = new Dictionary<Int16, Sampler>();
 
         public TSBitmap sampler;
         public IntPtr texture = IntPtr.Zero;
         public Int16 type;
-        private UInt32 w;
-        private UInt32 h;
+        public UInt32 w;
+        public UInt32 h;
         private Int16 life;
         public Int64 Count = 10000;
         public bool Consume = true;

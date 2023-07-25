@@ -16,7 +16,7 @@ namespace FSEngine.GFX
         public DrawFlag Flags { get => _Flags; set => _Flags = value; }
         public float scale_x = 720, scale_y = 480;
 
-        public bool DrawShapeAsOutline = false;
+        public bool DrawShapeAsOutline = true;
         /// <summary>
         /// Matrix to draw in pixel space
         /// </summary>

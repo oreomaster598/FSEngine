@@ -1,10 +1,12 @@
 ﻿using FSEngine.Concurrency;
 using FSEngine.GFX;
+using FSEngine.IO;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -31,14 +33,13 @@ namespace FSEngine.CellSystem
 
 		public static bool ShowChunks = false;
 		public static bool ShowDirtyRect = false;
-		internal IChunkManager chunkProvider;
 		public Vector2 PixelOffset = new Vector2(360, 360);
 		public UInt32 BufferChunks = 5;
 		public static Boolean SleepingChunks = false;
 		public Boolean SkipCellMode = false;
 		public Random rng = new Random();
 		CellRasterizer rasterizer;
-
+		public static bool render = true;
 		public CellChunk Hover = null;
 
 
@@ -54,25 +55,25 @@ namespace FSEngine.CellSystem
 				PixelOffset = new Vector2(value.X * chunk_s, value.Y * chunk_s);
 			}
 		}
-		public CellWorld(UInt32 width, UInt32 height, IChunkManager chunkProvider, CellRasterizer rasterizer)
+		public CellWorld(UInt32 width, UInt32 height,  CellRasterizer rasterizer)
         {
             this.height = height;
             this.width = width;
-            this.chunkProvider = chunkProvider;
             front_buffer = new TSBitmap(width * chunk_s, height * chunk_s);
             back_buffer = new TSBitmap(width * chunk_s, height * chunk_s);
             gfx = new CPUGraphics(back_buffer);
             //Physics.CollisionMap = new short[width * chunk_s, height * chunk_s];
             CalculateScale();
             this.rasterizer = rasterizer;
-			//ForceAll();
+            //ForceAll();
 
-		}
-		public CellWorld(UInt32 width, UInt32 height, IChunkManager chunkProvider)
+           rendered_chunks = new TSBitmap[width, height];
+
+        }
+		public CellWorld(UInt32 width, UInt32 height)
 		{
 			this.height = height;
 			this.width = width;
-			this.chunkProvider = chunkProvider;
 			front_buffer = new TSBitmap(width * chunk_s, height * chunk_s);
 			back_buffer = new TSBitmap(width * chunk_s, height * chunk_s);
 			gfx = new CPUGraphics(back_buffer);
@@ -117,6 +118,14 @@ namespace FSEngine.CellSystem
 		public static int SkipRate = 1;
 		public static Int16 HeatEffectMultiplier = 1;
 
+		/// <summary>
+		/// Forces a chunk into the world.
+		/// </summary>
+		/// <param name="chunk"></param>
+		public void Push(CellChunk chunk)
+        {
+			cache.chunks.Push(chunk);
+        }
 		public Vector2 ToScreenPos(Vector2 pos)
 		{
 			return pos - PixelOffset;
@@ -131,7 +140,121 @@ namespace FSEngine.CellSystem
 		public CPUGraphics gfx;
 		GFX.Color TransparentRed = new GFX.Color(100, 255, 0, 0);
 		GFX.Color TransparentGreen = new GFX.Color(100, 0, 255, 0);
+		bool force_update_chunks = false;
+		bool only_on_screen = false;
+		/// <summary>
+		/// Updates all loaded chunks.
+		/// </summary>
+		/// <param name="only_on_screen">Only updates chunks that are on the screen.</param>
+		public void FroceChunkUpdates(bool only_on_screen = true)
+        {
+			force_update_chunks = true;
+			this.only_on_screen = only_on_screen;
+		}
 
+        public TSBitmap[,] rendered_chunks;
+
+
+		public void RasterChunk(CellChunk c, int ox, int oy)
+		{
+			if (c.x - ox >= width || c.y - oy >= height)
+				return;
+
+			uint pox = (uint)PixelOffset.X;
+			uint poy = (uint)PixelOffset.Y;
+
+			if(rendered_chunks[c.x - ox, c.y - oy] == null)
+                rendered_chunks[c.x - ox, c.y - oy] = new TSBitmap(chunk_s, chunk_s);
+			rendered_chunks[c.x - ox, c.y - oy].Clear();
+            for (Int32 y = 0; y != chunk_s; y++)
+				for (Int32 x = 0; x != chunk_s; x++)
+				{
+
+					Cell cell = c.GetCell(x, y);
+
+                    if (cell.type != 0)
+					{
+
+                        rendered_chunks[c.x - ox, c.y - oy].SetPixel(x, y, rasterizer.RasterizeCell(cell, x, y, (uint)(c.x * chunk_s + x - pox), (uint)(c.y * chunk_s + y - poy)));
+
+					}
+				}
+			c.rendered = true;
+            Window.game.stats.rendered_chunks++;
+        }
+   
+        public void NewRaster()
+		{
+			Blazing.StartTimer();
+            if (frame % SkipRate != 0)
+                return;
+
+
+            Window.game.stats.rendered_chunks = 0;
+            int ox = (int)COrigin.X;
+            int oy = (int)COrigin.Y;
+            rasterizer.Init();
+			gfx.BeginThreadSafe();
+            Parallel.For(ox, ox + width + 1, (cx) =>
+            //for (int cx = ox; cx < ox + width + 1; cx++)
+            {
+                for (int cy = oy; cy < oy + height + 1; cy++)
+                {
+                    CellChunk c = null;
+                    Vector2 cp = new Vector2(cx, cy);
+                    int cox = (int)cx * chunk_s, coy = cy * chunk_s;
+
+                    if (cache.chunks.ContainsKey(cp))
+                        c = cache.chunks[cp];
+                    else
+                        continue;
+
+
+                    if (c.filledcells == 0)
+                        continue;
+
+                    if (force_update_chunks && only_on_screen)
+                    {
+                        c.KeepAlive(0, 0);
+                        c.KeepAlive(chunk_s - 1, chunk_s - 1);
+                    }
+
+                    Vector2 pos = new Vector2(cox, coy) - PixelOffset;
+
+                    int tx = (Int32)pos.X;
+                    int ty = (Int32)pos.Y;
+
+
+                    if (c.updatedcells > 0)
+                        c.rendered = false;
+
+					bool rendered_this_frame = false;
+                    if (!c.rendered)
+                    {
+                        RasterChunk(c, ox, oy);
+						rendered_this_frame = true;
+                    }
+
+
+
+                    if (c.rendered && rendered_chunks[c.x - ox, c.y - oy] != null)
+                    {
+                        if (pos.X < 0 || pos.Y < 0 || pos.X > (width * chunk_s - 1) || pos.Y > (height * chunk_s - 1))
+                            continue;
+                        gfx.BlitSafe(rendered_chunks[c.x - ox, c.y - oy], tx, ty);
+                    }
+		
+					
+
+
+                }
+            });
+			gfx.EndThreadSafe();
+            SwapBuffers();
+            Window.game.stats.render_ms = Blazing.StopTimerD();
+        }
+
+        [BlazePreJIT]
 		public void Raster()
 		{
 			if (frame % SkipRate != 0)
@@ -139,8 +262,8 @@ namespace FSEngine.CellSystem
 
 			int ox = (int)COrigin.X;
 			int oy = (int)COrigin.Y;
-            Parallel.For(ox, ox + width + 1, (cx) =>
-            //for (int cx = ox; cx < ox + width + 1; cx++)
+			rasterizer.Init();
+			Parallel.For(ox, ox + width + 1, (cx) =>
 			{
 				for (int cy = oy; cy < oy + height + 1; cy++)
 				{
@@ -158,13 +281,22 @@ namespace FSEngine.CellSystem
 
 					if (c.filledcells == 0)
 						continue;
-					for (Int32 y = 0; y != chunk_s; y++)
+
+					if (force_update_chunks && only_on_screen)
+					{
+						c.KeepAlive(0, 0);
+						c.KeepAlive(chunk_s - 1, chunk_s - 1);
+					}
+                    if (!render)
+                        continue;
+                    for (Int32 y = 0; y != chunk_s; y++)
 						for (Int32 x = 0; x != chunk_s; x++)
 						{
+
 							Cell cell = c.GetCell(x, y);
 
 							Vector2 pos = new Vector2(x + cox, y + coy) - PixelOffset;
-							
+
 							uint tx = (UInt32)pos.X;
 							uint ty = (UInt32)pos.Y;
 
@@ -173,23 +305,24 @@ namespace FSEngine.CellSystem
 								continue;
 
 
-			
+							int maxX = c.maxX - c.minX - 1;
+							int maxY = c.maxY - c.minY - 1;
+							int X = x - c.minX;
+							int Y = y - c.minY;
 
 							if (cell.type == 0)
 							{
-								//(x <= c.maxX && x >= c.minX) && (y <= c.maxY && y >= c.minY)
-								int maxX = c.maxX - c.minX - 1;
-								int maxY = c.maxY - c.minY - 1;
-								int X = x - c.minX;
-								int Y = y - c.minY;
+							
+					
 
-								if(ShowChunks)
-                                {
+								if (ShowChunks)
+								{			
+
 									if (ShowDirtyRect && (X >= 0 && X <= maxX && Y >= 0 && Y <= maxY) && ((X % maxX) == 0 || (Y % maxY) == 0))
 									{
 										back_buffer.SetPixel(tx, ty, GFX.Color.Red);
 									}
-									else if(ShowDirtyRect && (x > c.minX && x < c.maxX) && (y > c.minY && y < c.maxY))
+									else if (ShowDirtyRect && (x > c.minX && x < c.maxX) && (y > c.minY && y < c.maxY))
 									{
 										back_buffer.SetPixel(tx, ty, TransparentRed);
 									}
@@ -201,20 +334,35 @@ namespace FSEngine.CellSystem
 									{
 										back_buffer.SetPixel(tx, ty, TransparentGreen);
 									}
-                                }
-	
-								//else
-								//	back_buffer.SetPixel(tx, ty, CellRasterizer.RasterizeWall(tx, ty, c.biome));
+								}
 								continue;
 							}
-							back_buffer.SetPixel(tx, ty, rasterizer.RasterizeCell(cell, (int)cx * chunk_s + x, cy * chunk_s + y,tx,ty));
-							/*if (ShowChunks && (x <= c.maxX && x >= c.minXw) && (y <= c.maxY && y >= c.minYw))
-							{
-								back_buffer.MulPixel(tx, ty, 1.0f, 0.5f, 0.5f);
-							}*/
+                            if (ShowChunks)
+                            {
+
+                                if (ShowDirtyRect && (X >= 0 && X <= maxX && Y >= 0 && Y <= maxY) && ((X % maxX) == 0 || (Y % maxY) == 0))
+                                {
+                                    back_buffer.MulPixel(tx, ty, 1f, 0.35f, 0.35f);
+                                }
+                                else if (ShowDirtyRect && (x > c.minX && x < c.maxX) && (y > c.minY && y < c.maxY))
+                                {
+                                    back_buffer.MulPixel(tx, ty, 0.8f, 0.35f, 0.35f);
+                                }
+                                else if ((x % (chunk_s - 1) == 0) || (y % (chunk_s - 1) == 0))
+                                {
+                                    back_buffer.MulPixel(tx, ty, 0.35f, 1f, 0.35f);
+                                }
+                                else
+                                {
+                                    back_buffer.MulPixel(tx, ty, 0.35f, 0.8f, 0.35f);
+                                }
+                            }
+                            back_buffer.SetPixel(tx, ty, rasterizer.RasterizeCell(cell, (int)cx * chunk_s + x, cy * chunk_s + y, tx, ty));
+							
 						}
 				}
 			});
+
 			SwapBuffers();
 		}
 
@@ -223,6 +371,8 @@ namespace FSEngine.CellSystem
 		///Random double for random stuff
 		public double random = 0;
 		public bool simulate = true;
+
+		[BlazePreJIT]
 		private void UpdateVariables()
         {
 			CalculateScale();
@@ -230,7 +380,7 @@ namespace FSEngine.CellSystem
 			frame++;
 			CellsUpdated = 0;
 			MousePosition = ToWorldPosition((int)Mouse.CursorPos.X, (int)Mouse.CursorPos.Y);
-			step_start = Time.sw.ElapsedMilliseconds;
+			step_start = Time.ElapsedMilliseconds;
 		}
 		int phase = 0;
 		long step_start = 0;
@@ -239,21 +389,28 @@ namespace FSEngine.CellSystem
 		/// </summary>
 		/// <typeparam name="T">Chunk Worker</typeparam>
 		/// <param name="fps">Simulation FPS Won't exceed this value.</param>
+		[BlazePreJIT]
 		public void Step<T>(long fps = 30) where T : ChunkWorker
 		{
 			if (simulate) 
 			{ 
 				long min_time_ms = 1000 / fps;
 
-				if (Time.sw.ElapsedMilliseconds - step_start < min_time_ms)
+				if (Time.ElapsedMilliseconds - step_start < min_time_ms)
+                {
 					return;
-			}
+				}
 
+			}
+			Blazing.StartTimer();
 			UpdateVariables();
 			//PullAll();
 			//cache.LoadAll(this);
 			cache.chunks.Cycle((int)COrigin.X - (int)BufferChunks, (int)COrigin.Y - (int)BufferChunks);
-			CellChunk[,] chunk = cache.chunks.chunks;
+			Regions.x = (int)(COrigin.X / 16);
+			Regions.y = (int)(COrigin.Y / 16);
+            Console.WriteLine(Regions.x + "," + Regions.y);
+            CellChunk[,] chunk = cache.chunks.chunks;
 
 			int processed = 0;
 			int added = 0;
@@ -272,9 +429,14 @@ namespace FSEngine.CellSystem
 
 				foreach (CellChunk c in chunk)
 				{
-					if (c == null)
+						if (c == null || !cache.chunks.Simulate(c.x, c.y))
 						continue;
 
+					if(force_update_chunks && !only_on_screen)
+                    {
+						c.KeepAlive(0, 0);
+						c.KeepAlive(chunk_s - 1, chunk_s - 1);
+					}
 					if (c.x % 2 + (c.y % 2) * 2 == i)
 					{
 						added++;
@@ -298,25 +460,35 @@ namespace FSEngine.CellSystem
 			    added = 0;
 			}
 
+			Window.game.stats.step_cells_ms = Blazing.StopTimerD();
 			lights.Clear();
-			Raster();
 
-			Vector2 pos = new Vector2((Int32)(MousePosition.X / chunk_s), (Int32)((int)MousePosition.Y / chunk_s));
+			//Raster();
+			NewRaster();
+
+            Vector2 pos = new Vector2((Int32)(MousePosition.X / chunk_s), (Int32)((int)MousePosition.Y / chunk_s));
 			if (cache.chunks.ContainsKey(pos))
 			{
 				Hover = cache.chunks[pos];
 			}
 			else
 				Hover = null;
-		}
-	
 
-		public int TrueX(CellChunk chunk, Int32 pos)
+			force_update_chunks = false;
+		}
+
+		public void SetRasterizer(CellRasterizer rasterizer)
+        {
+			this.rasterizer = rasterizer;
+        }
+
+        public int TrueX(CellChunk chunk, Int32 pos)
 			=> pos + chunk.x * chunk_s;
 
 		public int TrueY(CellChunk chunk, Int32 pos)
 			=> pos + chunk.y * chunk_s;
 
+		[BlazePreJIT]
 		public void Wake(Int32 x, Int32 y)
 		{
 			Vector2 pos = new Vector2((Int32)(x / chunk_s), (Int32)(y / chunk_s));
@@ -324,6 +496,7 @@ namespace FSEngine.CellSystem
 				cache.chunks[pos].Asleep = false;
 		}
 
+		[BlazePreJIT]
 		public void Notify(Int32 x, Int32 y)
 		{
 			Vector2 pos = new Vector2((Int32)(x / chunk_s), (Int32)(y / chunk_s));
@@ -338,6 +511,8 @@ namespace FSEngine.CellSystem
 		{
 			return new Vector2((Int32)(x / chunk_s), (Int32)(y / chunk_s));
 		}
+
+		[BlazePreJIT]
 		public CellChunk GetChunk(Int32 x, Int32 y)
 		{
 			Vector2 pos = new Vector2((x / chunk_s), (y / chunk_s));
@@ -350,6 +525,8 @@ namespace FSEngine.CellSystem
 			cache.chunks.Add(pos, c);
 			return c;
 		}
+
+		[BlazePreJIT]
 		public CellChunk PeekChunk(Int32 x, Int32 y)
 		{
 			Vector2 pos = new Vector2((Int32)(x / chunk_s), (Int32)(y / chunk_s));
@@ -359,6 +536,8 @@ namespace FSEngine.CellSystem
 			}
 			return new CellChunk(x, y);
 		}
+
+		[BlazePreJIT]
 		public void MoveCell(Int32 x, Int32 y, Int32 nx, Int32 ny)
 		{
 			CellChunk chunk = GetChunk(x, y);
@@ -375,6 +554,7 @@ namespace FSEngine.CellSystem
 			chunk2.SetCell(mnx, mny, ce);
 		}
 
+		[BlazePreJIT]
 		public void MoveCell(CellChunk src, Int32 x, Int32 y, Int32 nx, Int32 ny)
 		{
 			CellChunk chunk2 = GetChunk(nx, ny);
@@ -388,6 +568,8 @@ namespace FSEngine.CellSystem
 			src.Clear(x, y);
 			chunk2.SetCell(mnx, mny, ce);
 		}
+
+		[BlazePreJIT]
 		public bool IsEmpty(Int32 x, Int32 y)
 		{
 			if (!InBounds(x, y))
@@ -395,52 +577,41 @@ namespace FSEngine.CellSystem
 
 			return GetChunk(x, y).IsEmpty(x % chunk_s, y % chunk_s);
 		}
+
+		[BlazePreJIT]
 		public bool InBounds(Int32 x, Int32 y)
 		{
 			return cache.chunks.InBounds(x / chunk_s, y / chunk_s);
 		}
+
+		[BlazePreJIT]
 		public void SetCell(Int32 x, Int32 y, Cell c)
 		{
 			GetChunk(x, y).SetCell(x % chunk_s, y % chunk_s, c);
 		}
-		public void SetCellDead(Int32 x, Int32 y, Cell c)
-		{
-			GetChunk(x, y).SetCellDead(x % chunk_s, y % chunk_s, c);
-		}
-		public bool TrySetCell(Int32 x, Int32 y, Cell c)
-		{
-			CellChunk cc = GetChunk(x, y);
-			if(cc.IsEmpty(x % chunk_s, y % chunk_s))
-            {
-				cc.SetCell(x % chunk_s, y % chunk_s, c);
-				return true;
-            }
-			return false;
-		}
-		public bool TrySetCellDead(Int32 x, Int32 y, Cell c)
-		{
-			CellChunk cc = GetChunk(x, y);
-			if (cc.IsEmpty(x % chunk_s, y % chunk_s))
-			{
-				cc.SetCellDead(x % chunk_s, y % chunk_s, c);
-				return true;
-			}
-			return false;
-		}
+
+
+		[BlazePreJIT]
 		public void SetCell(Int32 x, Int32 y, short id)
 		{
 			GetChunk(x, y).SetCell(x % chunk_s, y % chunk_s, Sampler.GetSampler(id).GetCell(x, y));
 		}
+
+		[BlazePreJIT]
 		public void ChangeCell(Int32 x, Int32 y, short id)
 		{
 			Cell c = Sampler.GetSampler(id).GetCell(x, y);
 			c.frame = (uint)frame;
 			GetChunk(x, y).SetCell(x % chunk_s, y % chunk_s, c);
 		}
+
+		[BlazePreJIT]
 		public void Clear(Int32 x, Int32 y)
 		{
 			GetChunk(x, y).Clear(x % chunk_s, y % chunk_s);
 		}
+
+		[BlazePreJIT]
 		public void Darken(Int32 x, Int32 y, float factor)
 		{
 			Cell c = GetChunk(x, y).GetCell(x % chunk_s, y % chunk_s);
@@ -449,14 +620,15 @@ namespace FSEngine.CellSystem
 			c.B = (byte)(c.B * factor);
 			GetChunk(x, y).SetCell(x % chunk_s, y % chunk_s, c);
 		}
-		public void PeekSetCell(Int32 x, Int32 y, Cell c)
-		{
-			PeekChunk(x, y).SetCell(x % chunk_s, y % chunk_s, c);
-		}
+
+
+		[BlazePreJIT]
 		public Cell GetCell(Int32 x, Int32 y)
 		{
 			return GetChunk(x, y).GetCell(x % chunk_s, y % chunk_s);
 		}
+
+		[BlazePreJIT]
 		public Cell PeekCell(Int32 x, Int32 y)
 		{
 			return PeekChunk(x, y).GetCell(x % chunk_s, y % chunk_s);

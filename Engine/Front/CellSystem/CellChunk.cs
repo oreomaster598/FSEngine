@@ -24,7 +24,9 @@ namespace FSEngine.CellSystem
         public bool save = false;
         public bool has_file = false;
 
-        public CellChunk(Int32 x, Int32 y, bool init = true)
+        public bool rendered = false;
+
+        public CellChunk(Int32 x, Int32 y, bool init = false)
         {
             this.x = x;
             this.y = y;
@@ -32,12 +34,14 @@ namespace FSEngine.CellSystem
             minY = 0; minYw = 0; maxYw = 0;
             if(init)
             {
-                maxX = CellWorld.chunk_s-1; 
-                maxY = CellWorld.chunk_s-1; 
+                KeepAlive(2, 2);
+                KeepAlive(CellWorld.chunk_s - 3, CellWorld.chunk_s - 3);
             }
             cells = new Cell[CellWorld.chunk_s, CellWorld.chunk_s];
+            
         }
 
+        [BlazePreJIT]
         public void KeepAlive(int x, int y)
         {
             minXw = (byte)Utils.Clamp(Math.Min(x - 2, minXw), 0, CellWorld.chunk_s);
@@ -46,6 +50,8 @@ namespace FSEngine.CellSystem
             maxYw = (byte)Utils.Clamp(Math.Max(y + 2, maxYw), 0, CellWorld.chunk_s);
 
         }
+
+        [BlazePreJIT]
         public void UpdateRect()
         {
             // Update current; reset working
@@ -58,17 +64,22 @@ namespace FSEngine.CellSystem
             if (minX > maxX)
                 minX = 0; 
             if (minY > maxY)
-                minY = 0; 
+                minY = 0;
         }
+
+        [BlazePreJIT]
         public bool IsEmpty(Int32 x, Int32 y) 
         {
-            return cells[x, y].type == 0; 
+            return cells[x, y].type == 0;
         }
+
+        [BlazePreJIT]
         public Cell GetCell(Int32 x, Int32 y)
         {
-            Cell c = cells[x, y];
-            return c;
+            return cells[x, y];
         }
+
+        [BlazePreJIT]
         public void SetCell(Int32 x, Int32 y, Cell cell)
         {
             if (cell.type == 0 && cells[x, y].type > 0)
@@ -83,12 +94,13 @@ namespace FSEngine.CellSystem
             save = true;
         }
 
-
+        [BlazePreJIT]
         public void Clear(Int32 x, Int32 y) 
         {
             SetCell(x, y, Cell.Zero);
         }
 
+        [BlazePreJIT]
         public void SetCellDead(Int32 x, Int32 y, Cell cell)
         {
             cells[x, y] = cell;
@@ -98,6 +110,8 @@ namespace FSEngine.CellSystem
                 filledcells--; 
             save = true;
         }
+
+        [BlazePreJIT]
         public bool InBounds(Int32 x, Int32 y)
         {
             return x >= this.x && x < this.x + CellWorld.chunk_s && y >= this.y && y < this.y + CellWorld.chunk_s;

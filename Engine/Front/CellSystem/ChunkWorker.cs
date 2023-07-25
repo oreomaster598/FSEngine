@@ -14,10 +14,11 @@ namespace FSEngine.CellSystem
     {
         public CellChunk chunk;
         public CellWorld world;
-        Random rng = new Random();
         public Material material;
         Int16 Skipped;
         Int16 Looped;
+
+        public static TSRandom rng = new TSRandom();
 
         public static int Randomness = 5;
         public double rn = 0;
@@ -111,8 +112,11 @@ namespace FSEngine.CellSystem
                         
                         Looped++;
 
+                        
+
                         rn = rng.NextDouble();
                         int rand = (int)((Randomness + 1) * rn);
+        
                         Cell c = chunk.GetCell(x, y);
 
                         if (c.type == 0)
@@ -121,7 +125,7 @@ namespace FSEngine.CellSystem
                             continue;
                         }
                         material = Materials.Get(c.type);
-                        if(!(c.frame != world.frame && material.Process != 0))
+                        if(!(c.frame != world.frame /*&& material.Process != 0*/))
                         {
                             Skipped++;
                             continue;
@@ -132,7 +136,6 @@ namespace FSEngine.CellSystem
                         #region Update
                         Int32 _x = x + (chunk.x * CellWorld.chunk_s);
                         Int32 _y = y + (chunk.y * CellWorld.chunk_s);
-
 
                         bool cease = UpdateCell(c, x, y, ref _x, ref _y, rn);
                         //c->frame = (UInt32)world.frame;

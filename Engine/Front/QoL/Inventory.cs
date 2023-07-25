@@ -55,6 +55,10 @@ namespace FSEngine.QoL
         {
 
         }
+        public virtual void DrawInUI()
+        {
+            ImGui.Image(texture, new Vector2(64, 64));
+        }
         public Item Clone()
         {
             return (Item)MemberwiseClone();
@@ -95,7 +99,8 @@ namespace FSEngine.QoL
                 ImGui.PushStyleColor(ImGuiCol.PopupBg, 0);
                 ImGui.PushStyleColor(ImGuiCol.Border, 0);
                 ImGui.BeginTooltip();
-                ImGui.Image(hover.texture, new Vector2(64, 64));
+                // ImGui.Image(hover.texture, new Vector2(64, 64));
+                hover.DrawInUI();
                 ImGui.EndTooltip();
                 ImGui.PopStyleColor(2);
             }
@@ -105,7 +110,7 @@ namespace FSEngine.QoL
             {
                 if(c.open)
                 {
-                    ImGui.Begin($"##c_{idx}", ImGuiWindowFlags.NoTitleBar  | ImGuiWindowFlags.NoResize);
+                    ImGui.Begin($"##c_{idx}", ImGuiWindowFlags.NoTitleBar  | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollbar);
                     c.Draw();
                     ImGui.End();
                 }
@@ -242,12 +247,12 @@ namespace FSEngine.QoL
 
 
 
-            drawList.AddImage(item.item.texture, cursor + new Vector2(2, 2), cursor + new Vector2(slot_size-2, slot_size-2));
-
+            //drawList.AddImage(item.item.texture, cursor + new Vector2(2, 2), cursor + new Vector2(slot_size-2, slot_size-2));
+            item.item.DrawInUI();
             if (item.item.count > 1)
                 drawList.AddText(cursor, 0xffffffff, item.item.count.ToString());
 
-            ImGui.Dummy(new Vector2(slot_size, slot_size));
+            //ImGui.Dummy(new Vector2(slot_size, slot_size));
 
         }
         public virtual void RenderSlotEmpty(Slot slot, ImDrawListPtr drawList)

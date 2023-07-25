@@ -1,0 +1,11 @@
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\bin\Debug\ProceduralItems.exe.config
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\bin\Debug\ProceduralItems.exe
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\bin\Debug\ProceduralItems.pdb
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\obj\Debug\ProceduralItems.csproj.AssemblyReference.cache
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\obj\Debug\ProceduralItems.csproj.SuggestedBindingRedirects.cache
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\obj\Debug\ProceduralItems.Properties.Resources.resources
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\obj\Debug\ProceduralItems.csproj.GenerateResource.cache
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\obj\Debug\ProceduralItems.csproj.CoreCompileInputs.cache
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\obj\Debug\ProceduralItems.exe
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\obj\Debug\ProceduralItems.pdb
+C:\Users\gabri\Documents\GitHub\FSEngine\ProceduralItems\obj\Debug\ProceduralItems.Form1.resources

@@ -10,9 +10,12 @@ using FSEngine.CellSystem;
 using FSEngine.CellSystem.Effects.Particles;
 using Box2DSharp.Dynamics;
 using Box2DSharp.Collision.Shapes;
+using FSEngine.Geometry;
+using Box2DSharp.Common;
 
 namespace FSEngine.Tiles
-{
+{ 
+
     public class Tile
     {
         public Cell[,] cells;
@@ -24,7 +27,24 @@ namespace FSEngine.Tiles
         public float midx, midy;
         public Body body;
         public bool asleep;
+        public bool background = false;
+
+        /// <summary>
+        /// Resolution of the collider mesh, in percentage.
+        /// </summary>
+        public static float MeshResolution = 0.04f;
+        /// <summary>
+        /// How often the tile updates when not moving.
+        /// Tick Rate of 1 is every frame, Tick Rate of 2 is every other frame; ect.
+        /// </summary>
+        public static int TickRate = 8;
+        /// <summary>
+        /// How many cells must change before the mesh updates.
+        /// </summary>
+        public static int EditTolerance = 10;
+
         bool Poly = false;
+        int before = 0, after = 0;
         public Tile(int x, int y, int width, int height)
         {
             this.x = x;
@@ -48,7 +68,7 @@ namespace FSEngine.Tiles
 
         public void CollectCells(CellWorld world, int sx, int sy)
         {
-
+            after = 0;
             for (int x = 0; x != width; x++)
                 for (int y = 0; y != height; y++)
                 {
@@ -67,8 +87,27 @@ namespace FSEngine.Tiles
 
                         if (cells[_x, _y].type > 0)
                         {
+                            if(background && c.owner != (short)id)
+                            {
+                                if(c.type == 0)
+                                {
+                                    cells[_x, _y] = c;
+                                    continue;
+                                }
+
+                                after++;
+                                continue;
+                            }
+
                             world.Clear(sx + x, sy + y);
-                            cells[_x, _y] = c;
+
+                            if(c.owner == (short)id || c.type == 0)
+                                cells[_x, _y] = c;
+                                
+       
+                            if(c.type > 0)
+                                    after++;
+          
                         }
                     }
                     
@@ -77,6 +116,7 @@ namespace FSEngine.Tiles
 
         public void InsertArray(CellWorld world, int sx, int sy)
         {
+            before = 0;
             for (int x = 0; x != width; x++)
                 for (int y = 0; y != height; y++)
                 {
@@ -93,11 +133,19 @@ namespace FSEngine.Tiles
 
                         if(cells[_x, _y].A > 0)
                         {
-                            world.SetCell(sx + x, sy + y, cells[_x, _y]);
-                            if (c.type > 0 && c.owner == 0)
+                            if(!(background && c.type > 0))
                             {
-                                ParticleEngine.AddParticleWithVelocity(c, sx + x, sy + y);
+                                if (c.type > 0 && c.owner == 0)
+                                {
+                                    ParticleEngine.AddParticleWithVelocity(c, sx + x, sy + y);
+                                }
+
+                                world.SetCell(sx + x, sy + y, cells[_x, _y]);
+                                before++;
+
+ 
                             }
+
                         }
 
                     }
@@ -156,7 +204,8 @@ namespace FSEngine.Tiles
             {
                 BodyType = type,
                 AllowSleep = false,
-                Position = new Vector2(px, py)
+                Position = new Vector2(px, py),
+                GravityScale = 10
             };
             t.body = world.CreateBody(bodyDef);
 
@@ -243,12 +292,122 @@ namespace FSEngine.Tiles
         {
             return Math.Abs(a - b) < 0.001f;
         }
+
+        private bool BadPolygon(Vector2[] vertices)
+        {
+            int count = vertices.Length;
+
+            int num = Math.Min(count, 8);
+            Span<Vector2> span = stackalloc Vector2[8];
+            int num2 = 0;
+            for (int i = 0; i < num; i++)
+            {
+                Vector2 vector = vertices[i];
+                bool flag = true;
+                for (int j = 0; j < num2; j++)
+                {
+                    if (Vector2.DistanceSquared(vector, span[j]) < 6.25E-06f)
+                    {
+                        flag = false;
+                        break;
+                    }
+                }
+
+                if (flag)
+                {
+                    span[num2] = vector;
+                    num2++;
+                }
+            }
+
+            num = num2;
+            if (num < 3)
+            {
+                return true;
+            }
+
+            int num3 = 0;
+            float num4 = span[0].X;
+            for (int k = 1; k < num; k++)
+            {
+                float x = span[k].X;
+                if (x > num4 || (x.Equals(num4) && span[k].Y < span[num3].Y))
+                {
+                    num3 = k;
+                    num4 = x;
+                }
+            }
+
+            Span<int> span2 = stackalloc int[8];
+            int num5 = 0;
+            int num6 = num3;
+            int num7;
+            do
+            {
+                span2[num5] = num6;
+                num7 = 0;
+                for (int l = 1; l < num; l++)
+                {
+                    if (num7 == num6)
+                    {
+                        num7 = l;
+                        continue;
+                    }
+
+                    Vector2 a = span[num7] - span[span2[num5]];
+                    Vector2 b = span[l] - span[span2[num5]];
+                    float num8 = MathUtils.Cross(in a, in b);
+                    if (num8 < 0f)
+                    {
+                        num7 = l;
+                    }
+
+                    if (num8.Equals(0f) && b.LengthSquared() > a.LengthSquared())
+                    {
+                        num7 = l;
+                    }
+                }
+
+                num5++;
+                num6 = num7;
+            }
+            while (num7 != num3);
+            if (num5 < 3)
+            {
+                return true;
+            }
+            return false;
+        }
+        private void Remesh()
+        {
+            Tile.triangles -= body.FixtureList.Count;
+            while (body.FixtureList.Count > 0)
+            {
+                body.DestroyFixture(body.FixtureList[0]);
+            }
+
+            Mesher m = new Mesher(null);
+            Vector2[][] triangles = m.Mesh(this, MeshResolution);
+
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                if(!BadPolygon(triangles[i]))
+                {
+                    PolygonShape shape = new PolygonShape();
+                    shape.Set(triangles[i], triangles[i].Length);
+                    body.CreateFixture(shape, 1);
+                }
+
+            }
+
+            Tile.triangles += triangles.Length;
+        }
         public void Tick(CellWorld world)
         {
             Vector2 pos = body.GetPosition();
             nr = body.GetAngle();
             body.IsAwake = !asleep;
-
+                
 
             if (Poly)
             {
@@ -272,8 +431,6 @@ namespace FSEngine.Tiles
                     CollectCells(world, x, y);
                     asleep = true;
                     init = true;
-
-                    Debug.Log($"Tile {id} fell asleep.");
                 }
                 return;
 
@@ -281,21 +438,28 @@ namespace FSEngine.Tiles
             else if (asleep)
             {
                 asleep = false;
-                Debug.Log($"Tile {id} awoke.");
             }
 
-            if (x != nx || y != ny || !CloseEnough(rotation, nr) || init)
+            if (x != nx || y != ny || !CloseEnough(rotation, nr) || init || world.frame % TickRate == 0)
             {
 
                 if (!init)
                     CollectCells(world, x, y);
                 x = nx;
                 y = ny;
-                rotation = nr;
+                rotation = nr; 
+
+                if (Poly && !init && Math.Abs(before - after) > EditTolerance)
+                {
+                    if(body.BodyType == BodyType.DynamicBody)
+                        Remesh();
+                }
+
                 InsertArray(world, nx, ny);
-   
+
                 init = false;
 
+          
             }
 
         }

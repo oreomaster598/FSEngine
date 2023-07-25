@@ -104,5 +104,12 @@ namespace FSEngine.OpenGL
             m.M41, m.M42, m.M43, m.M44
             };
         }
+
+        public void SetColor3(string name, GFX.Color value)
+        {
+            int loc = GL.GetUniformLocation(id, name);
+
+            GL.Uniform3(loc, value.R / 255f, value.G / 255f, value.B / 255f);
+        }
     }
 }

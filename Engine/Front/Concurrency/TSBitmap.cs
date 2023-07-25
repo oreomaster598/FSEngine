@@ -115,8 +115,16 @@ namespace FSEngine.Concurrency
             buffer[y * Width + x] = (byte)(buffer[y * Width + x] * b);
             buffer[y * Width + x + 1] = (byte)(buffer[y * Width + x + 1] * g);
             buffer[y * Width + x + 2] = (byte)(buffer[y * Width + x + 2] * r);
-            buffer[y * Width + x + 3] = 255;
         }
+        public void MulPixel(UInt32 x, UInt32 y, GFX.Color c)
+        {
+            x *= stride;
+            y *= stride;
+            buffer[y * Width + x] = (byte)((float)buffer[y * Width + x] * (255f / c.B));
+            buffer[y * Width + x + 1] = (byte)((float)buffer[y * Width + x + 1] * (255f / c.G));
+            buffer[y * Width + x + 2] = (byte)((float)buffer[y * Width + x + 2] * (255f / c.R));
+        }
+        public void SetPixelSafe(Int32 x, Int32 y, GFX.Color c) => SetPixelSafe((uint)x, (uint)y, c);
         public void SetPixelSafe(UInt32 x, UInt32 y, GFX.Color c)
         {
             x *= stride;
@@ -143,7 +151,8 @@ namespace FSEngine.Concurrency
             fixed (byte* ptr = buffer)
             {
                 GL.BindTexture(TextureTarget.Texture2D, glTexture.id);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)Width, (int)Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)ptr);
+                //GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, (int)Width, (int)Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)ptr);
+                GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, (int)Width, (int)Height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)ptr);
             }
                 
         }

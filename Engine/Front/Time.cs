@@ -16,18 +16,24 @@ namespace FSEngine
 
         public static int t_frames = 1;
         public static long frames = 1;
-        public static Stopwatch sw = Stopwatch.StartNew();
+        //public static Stopwatch sw = Stopwatch.StartNew();
         static long start;
+
+        public static long ElapsedMilliseconds = 0;
 
         public static void SetFrequency(float fps) => target = 1000f / fps;
         public static bool Tick()
         {
-            long ms = sw.Elapsed.Milliseconds;
+            long ms = Blazing.ElapsedMilliseconds;
+            ElapsedMilliseconds = ms;
             float mspf = ms - start;
+
+
 
             if (mspf >= target)
             {
-                fps = 1000.0f / mspf;
+                if ((int)(ms % (200.0f / target)) == 0)
+                    fps = 1000.0f / mspf;
                 current_mspf = mspf;
                 delta = 1.0f / (target / mspf);
                 start = ms;

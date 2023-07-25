@@ -10,6 +10,7 @@ using FSEngine.Concurrency;
 
 namespace FSEngine.CellSystem
 {
+    [BlazePreJIT]
     public class ChunkCache
     {
         public static string cache = @"Saves\Save0\Chunks";

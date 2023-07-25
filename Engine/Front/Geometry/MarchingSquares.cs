@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FSEngine.Tiles;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -54,6 +55,7 @@ namespace FSEngine.Geometry
     }
     public static class MarchingSquares
     {
+      
         public static bool isSet(int x, int y, int width, int height, byte[] data)
         {
             return x <= 0 || x > width || y <= 0 || y > height
@@ -134,6 +136,7 @@ namespace FSEngine.Geometry
 
             return result;
         }
-
+        
+       
     }
 }
